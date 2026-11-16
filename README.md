@@ -53,25 +53,35 @@ The code follows a modular programming approach through the `InflationCalculator
 
 ![Canadian CPI and Annual Inflation](cpi_graph.png)
 
-The graph displays historical Canadian CPI levels and annual inflation rates. The blue line represents CPI values, while the red line shows the annual percentage change compared with the same month in the previous year. The dotted horizontal line represents the CPI base level of 100, with 2002 serving as the base year.
+The graph provides a historical overview of how inflation and consumer prices have evolved in Canada. The blue line tracks the Consumer Price Index (CPI), showing the overall movement in price levels, while the red line measures the annual percentage change in CPI. Both lines use separate Y-axes to make it easier to compare long-term price movements with short-term inflation fluctuations. The dotted line at CPI = 100 represents the base year of 2002, providing a reference point for comparing prices across different periods.
 
-The CPI generally increases over the long term, reflecting an overall rise in Canadian price levels. However, the annual inflation rate is more volatile, with noticeable increases during the 1970s and early 1980s and again around 2022.
-
-An important observation is that even when the inflation rate decreases, CPI can continue to rise. This indicates that prices are increasing at a slower rate rather than necessarily declining.
-
+One interesting observation is the significant difference in how the two lines behave. While CPI generally follows an upward trend over time, the annual inflation rate experiences much greater fluctuations, including periods of negative inflation. This highlights how Canada's overall price level has increased over the decades, despite periods of economic instability and temporary price declines. The graph also demonstrates that inflation is not constant, with some periods experiencing much faster price increases than others.
 ## Sample Calculator Output
 
 **Example inputs:**
 
 - Original Value: CAD $100.00
 - First Date: `2020-01`
-- Second Date: `2025-01`
+- Second Date: `2022-01`
 
 **Example output:**
 
-Paste your actual calculator output from the terminal here after running the example.
+Canadian Inflation Calculator Results
 
-The program calculates the inflation-adjusted value using the CPI ratio between the selected dates. It also calculates the total percentage change and the average annualized rate of inflation.
+First Period: January 2020
+Second Period: January 2022
+
+Original Value: CAD $100.00
+Adjusted Value: CAD $106.21
+Value Difference: CAD $+6.21
+
+Percentage Change: +6.21%
+Difference in Years: 2.00
+Annual Rate of Change: +3.06%
+
+CPI for First Period: 136.80
+CPI for Second Period: 145.30
+
 
 ## Data Source
 
