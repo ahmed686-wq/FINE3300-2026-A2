@@ -68,19 +68,19 @@ One interesting observation is the significant difference in how the two lines b
 
 Canadian Inflation Calculator Results
 
-First Period: January 2020
-Second Period: January 2022
+- First Period: January 2020
+- Second Period: January 2022
 
-Original Value: CAD $100.00
-Adjusted Value: CAD $106.21
-Value Difference: CAD $+6.21
+- Original Value: CAD $100.00
+- Adjusted Value: CAD $106.21
+- Value Difference: CAD $+6.21
 
-Percentage Change: +6.21%
-Difference in Years: 2.00
-Annual Rate of Change: +3.06%
+- Percentage Change: +6.21%
+- Difference in Years: 2.00
+- Annual Rate of Change: +3.06%
 
-CPI for First Period: 136.80
-CPI for Second Period: 145.30
+- CPI for First Period: 136.80
+- CPI for Second Period: 145.30
 
 
 ## Data Source
