@@ -25,13 +25,13 @@ if header_row is None:
 df = pd.read_csv("STATIC_INFLATIONCALC.csv", skiprows=header_row)
 
 # Select the relevant columns
-df = df[["date", "STATIC_INFLATIONCALC"]].copy()
+df = df[["date", "STATIC_INFLATIONCALC"]]
 
-# Rename the columns
+# I renamed the columns to make it easier to work with rather than typing "STATIC_INFLATIONCALC" every time I want to reference the CPI column.
 df.columns = ["Date", "CPI"]
 
 
-# Step 2: Clean and organize CPI data
+# Step 2: This step involves cleaning and organizing CPI data
 
 # Convert dates to datetime format
 df["Date"] = pd.to_datetime(df["Date"])
@@ -48,298 +48,225 @@ df = df.set_index("Date")
 # Organize the data by month
 df = df.asfreq("MS")
 
-
-# Step 3: Calculate annual percentage change
-
-# Compare each month's CPI to the same month in the previous year
+# Calculate annual percentage change for graphing
 df["Annual_Inflation"] = (
     (df["CPI"] / df["CPI"].shift(12) - 1) * 100
 )
 
 
-# Step 4: Validate the user's price
-
-def get_price():
-
-    while True:
-
-        price = input("\nEnter the original price in CAD: ").strip()
-
-        # Remove optional dollar signs and commas
-        price = price.replace("$", "").replace(",", "")
-
-        if price.upper().startswith("CAD"):
-            price = price[3:].strip()
-
-        try:
-            price = float(price)
-
-            # Check that the price is a valid number
-            if not np.isfinite(price):
-                print("Please enter a valid numerical amount.")
-                continue
-
-            # Check that the price is not negative
-            if price < 0:
-                print("Price cannot be negative.")
-                continue
-
-            return price
-
-        except ValueError:
-            print("Invalid price. Please enter a number.")
-
-
-# Step 5: Validate the user's dates
+# Step 3: Validate the dates for user input error
 
 def get_date(message):
 
-    # Find the first and last available dates
     first_date = df["CPI"].first_valid_index()
     last_date = df["CPI"].last_valid_index()
 
     while True:
-
         date = input(message).strip()
 
-        # Check if the date follows YYYY-MM format
+        # Check YYYY-MM format. This checks for things like if the lenght is 7 characters, if the 5th character is a dash, and if the year and month are digits.
         if (
             len(date) != 7
             or date[4] != "-"
             or not date[:4].isdigit()
             or not date[5:].isdigit()
         ):
-            print("Invalid date format. Please use YYYY-MM.")
+            print("Invalid date format. Use YYYY-MM.")
             continue
 
-        # Extract the year and month
+        # Now from the inputted date, we will extract the year and month and check if they are valid. For example, if the user inputs 2023-13, it will be invalid because there is no 13th month.
         year = int(date[:4])
         month = int(date[5:7])
 
-        # Check if the month and year are valid
         if year < 1 or month < 1 or month > 12:
             print("Invalid month or year.")
             continue
 
         try:
-            selected_date = pd.Timestamp(
-                year=year,
-                month=month,
-                day=1
-            )
-
+            selected_date = pd.Timestamp(year, month, 1)
         except (ValueError, OverflowError):
             print("Invalid date.")
             continue
 
         # Check if the date is within the dataset
         if selected_date < first_date or selected_date > last_date:
-
-            print("Date is outside the available CPI data.")
             print(
-                f"Available dates: "
-                f"{first_date:%Y-%m} to {last_date:%Y-%m}"
+                f"Date must be between "
+                f"{first_date:%Y-%m} and {last_date:%Y-%m}."
             )
             continue
 
-        # Check if CPI data exists for the selected month
-        if pd.isna(df.loc[selected_date, "CPI"]):
-            print("CPI data is unavailable for this month.")
-            continue
 
         return selected_date
 
 
-# Step 6: Calculate inflation
+# Step 4: Main menu
 
-def calculate_inflation(price, first_date, second_date):
+while True:
 
-    # Find the CPI value for each period
-    first_cpi = float(df.loc[first_date, "CPI"])
-    second_cpi = float(df.loc[second_date, "CPI"])
+    print("\nMain Menu")
+    print("1. Inflation Calculator")
+    print("2. Generate CPI Graph")
+    print("3. Exit")
 
-    # Calculate the adjusted price
-    adjusted_price = price * (second_cpi / first_cpi)
+    choice = input("\nEnter your choice (1-3): ").strip()
 
-    # Calculate the difference in price
-    price_difference = adjusted_price - price
+    # Option 1: Inflation Calculator
+    if choice == "1":
 
-    # Calculate the percentage change
-    percentage_change = (
-        (second_cpi / first_cpi) - 1
-    ) * 100
+        print("\nCanadian Inflation Calculator")
 
-    # Calculate the difference in months
-    months = (
-        (second_date.year - first_date.year) * 12
-        + (second_date.month - first_date.month)
-    )
+        first_available = df["CPI"].first_valid_index()
+        last_available = df["CPI"].last_valid_index()
 
-    # Calculate the difference in years
-    years = months / 12
+        print(
+            f"Available dates: "
+            f"{first_available:%Y-%m} to {last_available:%Y-%m}"
+        )
 
-    # Calculate the annual rate of change
-    if months == 0:
-        annual_rate = 0
-    else:
-        annual_rate = (
-            np.power(
-                second_cpi / first_cpi,
-                12 / abs(months)
-            ) - 1
-        ) * 100
+        # Get and validate the original value
+        while True:
 
-    # Display the results
-    print("\nCanadian Inflation Calculator Results")
+            value = input("\nEnter the original value in CAD: ").strip()
 
-    print(f"\nFirst Period: {first_date:%B %Y}")
-    print(f"Second Period: {second_date:%B %Y}")
+            # Remove dollar signs and commas
+            value = value.replace("$", "").replace(",", "")
 
-    print("\nPrice Comparison")
+            try:
+                value = float(value)
 
-    print(f"Original Price: CAD ${price:,.2f}")
-    print(f"Adjusted Price: CAD ${adjusted_price:,.2f}")
-    print(f"Price Difference: CAD ${price_difference:+,.2f}")
+                if not np.isfinite(value) or value < 0:
+                    print("Please enter a valid non-negative value.")
+                    continue
 
-    print("\nInflation Statistics")
+                break
 
-    print(f"Percentage Change: {percentage_change:+.2f}%")
-    print(f"Difference in Months: {months}")
-    print(f"Difference in Years: {years:.2f}")
-    print(f"Annual Rate of Change: {annual_rate:+.2f}%")
+            except ValueError:
+                print("Invalid value. Please enter a number.")
 
-    print("\nConsumer Price Index")
+        # Get and validate the two dates
+        first_date = get_date(
+            "\nEnter the first date (YYYY-MM): "
+        )
 
-    print(f"CPI for First Period: {first_cpi:.2f}")
-    print(f"CPI for Second Period: {second_cpi:.2f}")
+        second_date = get_date(
+            "\nEnter the second date (YYYY-MM): "
+        )
 
+        # Get CPI values for the selected months
+        first_cpi = float(df.loc[first_date, "CPI"])
+        second_cpi = float(df.loc[second_date, "CPI"])
 
-# Step 7: Run the inflation calculator
+        # Calculate the adjusted value
+        adjusted_value = value * second_cpi / first_cpi
 
-def run_calculator():
+        # Calculate the percentage change
+        percentage_change = (second_cpi / first_cpi - 1) * 100
 
-    print("\nCanadian Inflation Calculator")
+        # Calculate the difference in months
+        months = (
+            (second_date.year - first_date.year) * 12
+            + second_date.month - first_date.month
+        )
 
-    # Find the available CPI date range
-    first_date = df["CPI"].first_valid_index()
-    last_date = df["CPI"].last_valid_index()
+        # Calculate the difference in years
+        years = months / 12
 
-    print(
-        f"Available CPI dates: "
-        f"{first_date:%Y-%m} to {last_date:%Y-%m}"
-    )
-
-    print("When prompted for dates, enter them using YYYY-MM format.")
-
-    # Get the three user inputs
-    price = get_price()
-
-    first_date = get_date(
-        "\nEnter the first date (YYYY-MM): "
-    )
-
-    second_date = get_date(
-        "\nEnter the second date (YYYY-MM): "
-    )
-
-    # Calculate and display inflation
-    calculate_inflation(price, first_date, second_date)
-
-
-# Step 8: Create the CPI graph
-
-def create_graph():
-
-    # Create the graph and left Y-axis
-    fig, ax1 = plt.subplots(figsize=(12, 6))
-
-    # Plot CPI on the left Y-axis
-    cpi_line, = ax1.plot(
-        df.index,
-        df["CPI"],
-        color="blue",
-        label="Consumer Price Index"
-    )
-
-    ax1.set_xlabel("Year")
-    ax1.set_ylabel("Consumer Price Index (CPI)", color="blue")
-    ax1.tick_params(axis="y", labelcolor="blue")
-
-    # Add a dotted line at the CPI base level
-    base_line = ax1.axhline(
-        y=100,
-        color="gray",
-        linestyle=":",
-        label="CPI Base Level (2002 = 100)"
-    )
-
-    # Create the right Y-axis
-    ax2 = ax1.twinx()
-
-    # Plot annual percentage change on the right Y-axis
-    inflation_line, = ax2.plot(
-        df.index,
-        df["Annual_Inflation"],
-        color="red",
-        label="Annual Percentage Change"
-    )
-
-    ax2.set_ylabel("Annual Percentage Change (%)", color="red")
-    ax2.tick_params(axis="y", labelcolor="red")
-
-    # Add the graph title
-    ax1.set_title(
-        "Canadian Consumer Price Index and Annual Inflation"
-    )
-
-    # Add the legend
-    ax1.legend(
-        handles=[cpi_line, inflation_line, base_line],
-        loc="upper left"
-    )
-
-    # Add the grid
-    ax1.grid(True, linestyle="--", alpha=0.3)
-
-    # Save the graph as a PNG file
-    plt.tight_layout()
-    plt.savefig("cpi_graph.png", dpi=300)
-
-    print("\nGraph saved as cpi_graph.png")
-
-    # Display the graph
-    plt.show()
-    plt.close(fig)
-
-
-# Step 9: Main menu
-
-def main():
-
-    while True:
-
-        print("\nMain Menu")
-        print("1. Inflation Calculator")
-        print("2. Generate CPI Graph")
-        print("3. Exit")
-
-        choice = input("\nEnter your choice (1-3): ").strip()
-
-        if choice == "1":
-            run_calculator()
-
-        elif choice == "2":
-            create_graph()
-
-        elif choice == "3":
-            print("\nProgram ended.")
-            break
-
+        # Calculate the annual rate of change
+        if months == 0:
+            annual_rate = 0
         else:
-            print("Invalid option. Please choose 1, 2, or 3.")
+            annual_rate = (
+                np.power(second_cpi / first_cpi, 12 / abs(months)) - 1
+            ) * 100
 
+        # Display the results
+        print("\nCanadian Inflation Calculator Results")
 
-# Step 10: Start the program
+        print(f"\nFirst Period: {first_date:%B %Y}")
+        print(f"Second Period: {second_date:%B %Y}")
 
-if __name__ == "__main__":
-    main()
+        print(f"\nOriginal Value: CAD ${value:,.2f}")
+        print(f"Adjusted Value: CAD ${adjusted_value:,.2f}")
+        print(f"Value Difference: CAD ${adjusted_value - value:+,.2f}")
+
+        print(f"\nPercentage Change: {percentage_change:+.2f}%")
+        print(f"Difference in Years: {years:.2f}")
+        print(f"Annual Rate of Change: {annual_rate:+.2f}%")
+
+        print(f"\nCPI for First Period: {first_cpi:.2f}")
+        print(f"CPI for Second Period: {second_cpi:.2f}")
+
+    # Option 2: CPI Graph
+    elif choice == "2":
+
+        # Create figure and left Y-axis
+        fig, ax1 = plt.subplots(figsize=(12, 6))
+
+        # Plot CPI
+        ax1.plot(
+            df.index,
+            df["CPI"],
+            color="blue",
+            label="Consumer Price Index"
+        )
+
+        ax1.set_xlabel("Year")
+        ax1.set_ylabel("Consumer Price Index (CPI)", color="blue")
+        ax1.tick_params(axis="y", labelcolor="blue")
+
+        # Dotted line at the base level
+        ax1.axhline(
+            y=100,
+            color="gray",
+            linestyle=":",
+            label="CPI Base Level (2002 = 100)"
+        )
+
+        # Right Y-axis for annual percentage change
+        ax2 = ax1.twinx()
+
+        ax2.plot(
+            df.index,
+            df["Annual_Inflation"],
+            color="red",
+            label="Annual Percentage Change"
+        )
+
+        ax2.set_ylabel("Annual Percentage Change (%)", color="red")
+        ax2.tick_params(axis="y", labelcolor="red")
+
+        # Graph title
+        ax1.set_title(
+            "Canadian Consumer Price Index and Annual Inflation"
+        )
+
+        # Include all graph lines in the legend
+        lines1, labels1 = ax1.get_legend_handles_labels()
+        lines2, labels2 = ax2.get_legend_handles_labels()
+
+        ax1.legend(
+            lines1 + lines2,
+            labels1 + labels2,
+            loc="lower right"
+        )
+
+        # Add grid
+        ax1.grid(True, linestyle="--", alpha=0.3)
+
+        # Save and display the graph
+        fig.tight_layout()
+        fig.savefig("cpi_graph.png", dpi=300)
+
+        print("\nGraph saved as cpi_graph.png")
+
+        plt.show()
+        plt.close(fig)
+
+    # Option 3: Exit
+    elif choice == "3":
+        print("\nProgram ended.")
+        break
+
+    else:
+        print("Invalid option. Please choose 1, 2, or 3.")
